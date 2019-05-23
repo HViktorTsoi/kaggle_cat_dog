@@ -13,7 +13,7 @@ import config
 
 
 class CatDogDataset(data.Dataset):
-    def __init__(self, train_csv_path, dataset_root_path, augment=True):
+    def __init__(self, train_csv_path, dataset_root_path, augment=True, is_training=True):
         # 初始化数据列表和数据集根目录
         self.data_list = pd.read_csv(train_csv_path).values
         self.dataset_root_path = dataset_root_path
@@ -27,6 +27,7 @@ class CatDogDataset(data.Dataset):
             #     std=(0.229, 0.224, 0.225)
             # )
         ])
+        self.is_training = is_training
 
     def __getitem__(self, idx):
         """
@@ -34,14 +35,17 @@ class CatDogDataset(data.Dataset):
         :param idx: 图像标识
         :return: 图像，对应label
         """
-        _, target, file_name = self.data_list[idx]
+        img_id, target, file_name = self.data_list[idx]
         img_path = os.path.join(self.dataset_root_path, file_name)
         img = skimage.io.imread(img_path)
         if self.augment:
             img = self.process_augment(img)
         # torch transform
         img = self.transform(img)
-        return img, target
+        if self.is_training:
+            return img, target
+        else:
+            return img, target, img_id
 
     def __len__(self):
         """
