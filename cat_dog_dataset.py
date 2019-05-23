@@ -18,7 +18,7 @@ class CatDogDataset(data.Dataset):
         self.data_list = pd.read_csv(train_csv_path).values
         self.dataset_root_path = dataset_root_path
         self.augment = augment
-        self.transforme = transforms.Compose([
+        self.transform = transforms.Compose([
             transforms.ToPILImage(),  # 先转PIL
             transforms.Resize([config.IMAGE_HEIGHT, config.IMAGE_WIDTH]),
             transforms.ToTensor(),  # 再转Tensor
@@ -40,7 +40,7 @@ class CatDogDataset(data.Dataset):
         if self.augment:
             img = self.process_augment(img)
         # torch transform
-        img = self.transforme(img)
+        img = self.transform(img)
         return img, target
 
     def __len__(self):

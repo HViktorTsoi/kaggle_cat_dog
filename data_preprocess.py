@@ -25,8 +25,8 @@ for file_name in os.listdir(path):
 # print(np.histogram(img_size[:, 0]))
 # print(np.histogram(img_size[:, 1]))
 
-# 划分训练集和验证集
-TRAIN_VAL_SPLIT = 24000
+# 划分训练集和验证集 保证验证集能被batch整除
+TRAIN_VAL_SPLIT = 25000 - 512 * 3
 # 随机排序
 dataset_list = np.array(dataset_list)[
                np.random.permutation(len(dataset_list)), :
