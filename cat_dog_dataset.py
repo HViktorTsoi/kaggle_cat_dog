@@ -2,10 +2,14 @@ import os
 import random
 
 from torch.utils import data
+from torchvision import transforms
 import skimage.io
 import pandas as pd
 import matplotlib.pyplot as plt
 from imgaug import augmenters
+import numpy as np
+
+import config
 
 
 class CatDogDataset(data.Dataset):
@@ -14,6 +18,15 @@ class CatDogDataset(data.Dataset):
         self.data_list = pd.read_csv(train_csv_path).values
         self.dataset_root_path = dataset_root_path
         self.augment = augment
+        self.transforme = transforms.Compose([
+            transforms.ToPILImage(),  # 先转PIL
+            transforms.Resize([config.IMAGE_HEIGHT, config.IMAGE_WIDTH]),
+            transforms.ToTensor(),  # 再转Tensor
+            # transforms.Normalize(
+            #     mean=(0.485, 0.456, 0.406),
+            #     std=(0.229, 0.224, 0.225)
+            # )
+        ])
 
     def __getitem__(self, idx):
         """
@@ -26,6 +39,8 @@ class CatDogDataset(data.Dataset):
         img = skimage.io.imread(img_path)
         if self.augment:
             img = self.process_augment(img)
+        # torch transform
+        img = self.transforme(img)
         return img, target
 
     def __len__(self):
@@ -62,6 +77,6 @@ if __name__ == '__main__':
     )
     for _ in range(10):
         img, target = cat_dog_dataset[0]
-        plt.imshow(img)
+        plt.imshow(np.transpose(img.numpy(), [1, 2, 0]))
         plt.show()
         print(target)
