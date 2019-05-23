@@ -7,6 +7,21 @@ from torch import nn
 import model
 
 
+def adjust_lr(optimizer, lr, epoch):
+    """
+    调整学习率
+    :param optimizer: 优化器
+    :param lr: 学习率
+    :return:
+    """
+    # 每隔固定epoch衰减学习率
+    decay_factor = epoch // config.TRAIN_LR_DECAY_STEP
+    lr = lr * config.TRAIN_LR_DECAY ** decay_factor
+    print('LR:{} DECAY_FACTOR:{} EPOCH:{}'.format(lr, decay_factor, epoch))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
 def val(model, criterion):
     """
     进行验证
@@ -32,12 +47,30 @@ def val(model, criterion):
             # 计算loss
             loss = criterion(outputs, target)
             val_loss += loss.item()
-        print("VAL_LOSS: {:.5f}".format(val_loss / (total_steps + 1)))
+            val_loss /= total_steps + 1
+        print("VAL_LOSS: {:.5f}".format(val_loss))
+        return val_loss
 
 
-def train():
+def train(ckpt_path=None):
     # 构建网络
     ResNet = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    ResNet = nn.DataParallel(ResNet)
+
+    # 载入checkpoint
+    if ckpt_path:
+        checkpoint = torch.load(ckpt_path)
+        ResNet.load_state_dict(checkpoint['model'])
+        start_epoch = checkpoint['epoch'] + 1
+        best_val_loss = checkpoint['best_val_loss']
+        print(
+            'LOADING CKPT {} EPOCH:{} best:{:.5f}'.format(
+                ckpt_path, start_epoch, best_val_loss
+            )
+        )
+    else:
+        start_epoch = 0
+        best_val_loss = 1e9
 
     # Loss
     criterion = nn.BCEWithLogitsLoss().cuda()
@@ -48,11 +81,16 @@ def train():
         lr=config.TRAIN_LR,
         momentum=0.9, weight_decay=1e-4
     )
-    for epoch in range(20):
+    optimizer = nn.DataParallel(optimizer).module
+    for epoch in range(start_epoch, start_epoch + 20):
         # misc
         running_loss = 0
         total_steps = len(train_dataset) // config.TRAIN_BATCH_SIZE
-        print('EPOCH: {}'.format(epoch))
+        print('\nEPOCH: {}'.format(epoch))
+
+        # 调整学习率
+        adjust_lr(optimizer, config.TRAIN_LR, epoch)
+
         # 训练模式
         ResNet.train()
         for step, (inputs, target) in enumerate(train_loader):
@@ -89,7 +127,31 @@ def train():
                 )
                 running_loss = 0
         # 验证
-        val(ResNet, criterion)
+        val_loss = val(ResNet, criterion)
+
+        # 保存模型
+        print('SAVING MODEL...')
+        torch.save(
+            {
+                'model': ResNet.state_dict(),
+                'epoch': epoch,
+                'val_loss': val_loss,
+                'best_val_loss': best_val_loss,
+            },
+            './ckpt/resnet_{:04d}.pth'.format(epoch)
+        )
+        # 选择验证集最优模型保存
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            torch.save(
+                {
+                    'model': ResNet.state_dict(),
+                    'epoch': epoch,
+                    'best_val_loss': best_val_loss
+                },
+                './ckpt/resnet_best.pth'.format(epoch)
+            )
+            print('BEST VAL LOSS:{}'.format(val_loss))
 
 
 if __name__ == '__main__':
@@ -115,4 +177,5 @@ if __name__ == '__main__':
         shuffle=False, pin_memory=True, num_workers=16, drop_last=False
     )
 
-    train()
+    train(ckpt_path='./ckpt/resnet_0001.pth')
+    # train()
