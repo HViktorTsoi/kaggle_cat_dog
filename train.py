@@ -138,7 +138,7 @@ def train(ckpt_path=None):
                 'val_loss': val_loss,
                 'best_val_loss': best_val_loss,
             },
-            './ckpt/resnet_{:04d}.pth'.format(epoch)
+            './ckpt/resnet50_{:04d}.pth'.format(epoch)
         )
         # 选择验证集最优模型保存
         if val_loss < best_val_loss:
@@ -149,7 +149,7 @@ def train(ckpt_path=None):
                     'epoch': epoch,
                     'best_val_loss': best_val_loss
                 },
-                './ckpt/resnet_best.pth'.format(epoch)
+                './ckpt/resnet50_best.pth'.format(epoch)
             )
             print('BEST VAL LOSS:{}'.format(val_loss))
 
@@ -177,5 +177,5 @@ if __name__ == '__main__':
         shuffle=False, pin_memory=True, num_workers=16, drop_last=False
     )
 
-    train(ckpt_path='./ckpt/resnet_0001.pth')
-    # train()
+    # train(ckpt_path='./ckpt/resnet_0001.pth')
+    train()

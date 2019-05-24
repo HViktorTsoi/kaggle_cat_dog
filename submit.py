@@ -57,7 +57,8 @@ def submit(ckpt_path=None):
             # plt.show()
             # 写入结果
         pd.DataFrame(result).to_csv(
-            './submit0015.csv', header=['id', 'label'], index=False
+            './submit/{}_submit.csv'.format(ckpt_path[ckpt_path.rfind('/'):]),
+            header=['id', 'label'], index=False
         )
 
 
@@ -76,4 +77,4 @@ if __name__ == '__main__':
         shuffle=False, pin_memory=True, num_workers=1, drop_last=False
     )
 
-    submit(ckpt_path='./ckpt/resnet_0015.pth')
+    submit(ckpt_path='./ckpt/resnet50_0019.pth')

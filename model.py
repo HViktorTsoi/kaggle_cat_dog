@@ -14,7 +14,7 @@ def build_ResNet(pretrained, num_classes):
     :return: 模型
     """
     # 初始化模型
-    model = models.resnet18(pretrained=pretrained)
+    model = models.resnet50(pretrained=pretrained)
     # 获取预训练的resnet
     fc_features = model.fc.in_features
 
