@@ -82,7 +82,7 @@ def train(ckpt_path=None):
         momentum=0.9, weight_decay=1e-4
     )
     optimizer = nn.DataParallel(optimizer).module
-    for epoch in range(start_epoch, start_epoch + 20):
+    for epoch in range(start_epoch, start_epoch + config.TRAIN_TOTAL_EPOCH):
         # misc
         running_loss = 0
         total_steps = len(train_dataset) // config.TRAIN_BATCH_SIZE
@@ -138,7 +138,7 @@ def train(ckpt_path=None):
                 'val_loss': val_loss,
                 'best_val_loss': best_val_loss,
             },
-            './ckpt/resnet50_{:04d}.pth'.format(epoch)
+            './ckpt/{}_{:04d}.pth'.format(config.MODEL_NAME, epoch)
         )
         # 选择验证集最优模型保存
         if val_loss < best_val_loss:
@@ -149,7 +149,7 @@ def train(ckpt_path=None):
                     'epoch': epoch,
                     'best_val_loss': best_val_loss
                 },
-                './ckpt/resnet50_best.pth'.format(epoch)
+                './ckpt/{}_best.pth'.format(config.MODEL_NAME, epoch)
             )
             print('BEST VAL LOSS:{}'.format(val_loss))
 
