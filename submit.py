@@ -19,12 +19,12 @@ def submit(ckpt_path=None):
     :return:
     """
     # 构建网络
-    ResNet = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
-    ResNet = nn.DataParallel(ResNet)
+    net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    net = nn.DataParallel(net)
 
     # 载入checkpoint
     checkpoint = torch.load(ckpt_path)
-    ResNet.load_state_dict(checkpoint['model'])
+    net.load_state_dict(checkpoint['model'])
     start_epoch = checkpoint['epoch'] + 1
     best_val_loss = checkpoint['best_val_loss']
     print(
@@ -34,7 +34,7 @@ def submit(ckpt_path=None):
     )
 
     with torch.no_grad():
-        ResNet.eval()
+        net.eval()
         val_loss = 0
         print('\nVALIDATING...')
         total_steps = len(test_dataset)
@@ -43,7 +43,7 @@ def submit(ckpt_path=None):
             inputs = inputs.cuda(non_blocking=True)
 
             # 前向传播 获取预测值
-            outputs = ResNet(inputs)
+            outputs = net(inputs)
 
             # 使用softmax获取概率
             logits = functional.softmax(outputs, dim=1)
