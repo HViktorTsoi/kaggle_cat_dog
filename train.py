@@ -54,13 +54,13 @@ def val(model, criterion):
 
 def train(ckpt_path=None):
     # 构建网络
-    ResNet = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
-    ResNet = nn.DataParallel(ResNet)
+    net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    net = nn.DataParallel(net)
 
     # 载入checkpoint
     if ckpt_path:
         checkpoint = torch.load(ckpt_path)
-        ResNet.load_state_dict(checkpoint['model'])
+        net.load_state_dict(checkpoint['model'])
         start_epoch = checkpoint['epoch'] + 1
         best_val_loss = checkpoint['best_val_loss']
         print(
@@ -77,7 +77,7 @@ def train(ckpt_path=None):
 
     # 优化器
     optimizer = optim.SGD(
-        ResNet.parameters(),
+        net.parameters(),
         lr=config.TRAIN_LR,
         momentum=0.9, weight_decay=1e-4
     )
@@ -92,7 +92,7 @@ def train(ckpt_path=None):
         adjust_lr(optimizer, config.TRAIN_LR, epoch)
 
         # 训练模式
-        ResNet.train()
+        net.train()
         for step, (inputs, target) in enumerate(train_loader):
             inputs = inputs.cuda(non_blocking=True)
             # 将gt转换成onehot编码
@@ -104,7 +104,7 @@ def train(ckpt_path=None):
             optimizer.zero_grad()
 
             # 前向传播
-            outputs = ResNet(inputs)
+            outputs = net(inputs)
 
             # 计算loss
             loss = criterion(outputs, target)
@@ -127,13 +127,13 @@ def train(ckpt_path=None):
                 )
                 running_loss = 0
         # 验证
-        val_loss = val(ResNet, criterion)
+        val_loss = val(net, criterion)
 
         # 保存模型
         print('SAVING MODEL...')
         torch.save(
             {
-                'model': ResNet.state_dict(),
+                'model': net.state_dict(),
                 'epoch': epoch,
                 'val_loss': val_loss,
                 'best_val_loss': best_val_loss,
@@ -145,7 +145,7 @@ def train(ckpt_path=None):
             best_val_loss = val_loss
             torch.save(
                 {
-                    'model': ResNet.state_dict(),
+                    'model': net.state_dict(),
                     'epoch': epoch,
                     'best_val_loss': best_val_loss
                 },
