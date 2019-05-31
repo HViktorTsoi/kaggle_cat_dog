@@ -54,7 +54,9 @@ def val(model, criterion):
 
 def train(ckpt_path=None):
     # 构建网络
-    net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    # net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    # net = model.build_inception(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    net = model.build_senet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
     net = nn.DataParallel(net)
 
     # 载入checkpoint
