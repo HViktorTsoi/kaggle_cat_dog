@@ -19,7 +19,9 @@ def submit(ckpt_path=None):
     :return:
     """
     # 构建网络
-    net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    # net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    # net = model.build_inception(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    net = model.build_senet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
     net = nn.DataParallel(net)
 
     # 载入checkpoint
@@ -47,15 +49,17 @@ def submit(ckpt_path=None):
 
             # 使用softmax获取概率
             logits = functional.softmax(outputs, dim=1)
-            print(img_id.item(), logits)
-            result.append([
-                img_id.item(), np.squeeze(logits.cpu().numpy())[1]
-            ])
+            print('TESTING: {}/{}'.format(step, total_steps // 125))
+            result.append(
+                torch.cat([img_id.cuda().float().view(-1, 1), logits], dim=1).cpu().numpy()
+            )
 
             # plt.imshow(np.squeeze(inputs.cpu().numpy()).transpose([1, 2, 0]))
             # plt.title(str(logits.cpu().numpy()) + str(img_id.cpu()))
             # plt.show()
-            # 写入结果
+        # 写入结果
+        # 整理结果
+        result = np.vstack(result)[:, [0, 2]]
         pd.DataFrame(result).to_csv(
             './submit/{}_submit.csv'.format(ckpt_path[ckpt_path.rfind('/'):]),
             header=['id', 'label'], index=False
@@ -73,8 +77,8 @@ if __name__ == '__main__':
 
     # 载入数据集
     test_loader = data.DataLoader(
-        test_dataset, batch_size=1,
-        shuffle=False, pin_memory=True, num_workers=1, drop_last=False
+        test_dataset, batch_size=125,
+        shuffle=False, pin_memory=True, num_workers=16, drop_last=False
     )
 
-    submit(ckpt_path='./ckpt/resnet50_0019.pth')
+    submit(ckpt_path='./ckpt/se_res_net_best.pth')
