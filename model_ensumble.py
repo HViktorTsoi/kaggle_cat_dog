@@ -25,6 +25,8 @@ def ensumble_result():
         './submit/TTA_resnet50_0019.pth_submit.csv',
         './submit/se_res_net_best.pth_submit.csv',
         './submit/TTA_ORIGIN_se_res_net_best.csv',
+        './submit/nasnet_large_best.pth_submit.csv',
+        './submit/TTA_nasnet_large_best.pth_submit.csv',
 
     ]
     result_list = [pd.read_csv(f).values for f in result_list]
@@ -36,7 +38,7 @@ def ensumble_result():
     # scores = np.max(scores, axis=1)
     # 输出结果
     result = np.vstack([ids, scores]).T
-    limit_score(result, name='TTA_ensumble_mean_ser50_all')
+    limit_score(result, name='TTA_ensumble_mean_ser50nas_all')
 
 
 def process_tta():
@@ -60,8 +62,8 @@ def process_tta():
 
 if __name__ == '__main__':
     # limit_score(
-    #     result=pd.read_csv('./submit/TTA_resnet50_0019.pth_submit.csv').values,
-    #     name='TTA_resnet50'
+    #     result=pd.read_csv('./submit/nasnet_large_best.pth_submit.csv').values,
+    #     name='nasnet'
     # )
     ensumble_result()
     # process_tta()

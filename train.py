@@ -56,7 +56,8 @@ def train(ckpt_path=None):
     # 构建网络
     # net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
     # net = model.build_inception(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
-    net = model.build_senet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    # net = model.build_senet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    net = model.build_nasnet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
     net = nn.DataParallel(net)
 
     # 载入checkpoint
@@ -179,5 +180,5 @@ if __name__ == '__main__':
         shuffle=False, pin_memory=True, num_workers=16, drop_last=False
     )
 
-    # train(ckpt_path='./ckpt/resnet_0001.pth')
-    train()
+    train(ckpt_path='./ckpt/nasnet_large_0001.pth')
+    # train()

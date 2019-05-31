@@ -2,7 +2,7 @@ import math
 
 from torchvision import models
 from torch import nn
-from pretrainedmodels.models import bninception, se_resnet50
+from pretrainedmodels.models import bninception, se_resnet50, nasnetalarge
 
 import config
 
@@ -74,4 +74,23 @@ def build_senet(pretrained, num_classes):
         nn.Dropout(0.5),
         nn.Linear(new_last_in_feature, num_classes),
     )
+    return model
+
+
+def build_nasnet(pretrained, num_classes):
+    """
+    构建nasnet模型
+    :param pretrained: 是否预训练
+    :param num_classes: 类别数
+    :return: 模型
+    """
+    model = nasnetalarge(pretrained='imagenet', num_classes=1000)
+    # 修改avg pool
+    model.avg_pool = nn.AvgPool2d(2, stride=1, padding=0)
+    # 获取预训练的resnet
+    new_last_linear = nn.Linear(435456, num_classes)
+    # new_last_linear.weight.data = model.last_linear.weight.data[1:]
+    # new_last_linear.bias.data = model.last_linear.bias.data[1:]
+    model.last_linear = new_last_linear
+
     return model

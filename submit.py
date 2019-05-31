@@ -22,9 +22,10 @@ def submit(ckpt_path=None):
     :return:
     """
     # 构建网络
-    net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    # net = model.build_ResNet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
     # net = model.build_inception(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
     # net = model.build_senet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
+    net = model.build_nasnet(pretrained=True, num_classes=config.NUM_CLASSES).cuda()
     net = nn.DataParallel(net)
 
     # 载入checkpoint
@@ -67,7 +68,7 @@ def submit(ckpt_path=None):
             # 对TTA结果取均值
             result = np.mean(result, axis=0)
         pd.DataFrame(result).to_csv(
-            './submit/TTA_{}_submit.csv'.format(ckpt_path[ckpt_path.rfind('/') + 1:]),
+            './submit/{}{}_submit.csv'.format('TTA_' if config.TEST_TTA else '', ckpt_path[ckpt_path.rfind('/') + 1:]),
             header=['id', 'label'], index=False
         )
 
@@ -106,6 +107,6 @@ if __name__ == '__main__':
         test_loader = tqdm(data.DataLoader(
             test_dataset, batch_size=config.TEST_BATCH_SIZE,
             shuffle=False, pin_memory=True, num_workers=22, drop_last=False
-        ), total=len(test_dataset) // config.TRAIN_BATCH_SIZE)
+        ), total=len(test_dataset) // config.TEST_BATCH_SIZE)
 
-    submit(ckpt_path='./ckpt/resnet50_0019.pth')
+    submit(ckpt_path='./ckpt/nasnet_large_best.pth')
