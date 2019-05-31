@@ -1,5 +1,6 @@
 import os
 import random
+import time
 
 from torch.utils import data
 from torchvision import transforms
@@ -67,7 +68,8 @@ class CatDogDataset(data.Dataset):
                 augmenters.Affine(shear=(-16, 16)),
                 augmenters.Fliplr(1),
                 augmenters.GaussianBlur(1.0),
-            ])
+                augmenters.Noop()
+            ], random_state=int(time.time()))
         ])
         augmented_img = augmentor.augment_image(image)
         return augmented_img
